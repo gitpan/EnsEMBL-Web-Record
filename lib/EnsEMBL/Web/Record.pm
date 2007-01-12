@@ -11,23 +11,38 @@ package EnsEMBL::Web::Record;
 
 =head1 NAME
 
-EnsEMBL::Web::Record - A family of modules used for representing and storing a user's
-persistant data.
+EnsEMBL::Web::Record - A family of modules used for managing a user's
+persistant data in a database.
 
 =head1 VERSION
 
-Version 1.00
+Version 1.01
 
 =cut
 
-our $VERSION = '1.00';
+our $VERSION = '1.01';
 
 =head1 SYNOPSIS
 
-This family of modules provides a fast, flexible representation of persitant user data. It allows
-the storage and retrieval of arbitrary key-value pairs, in a single database field.
+    Many web sites now encourage users to register and login to access
+    more advanced features, and to customise a site to their needs.
 
-It was initially developed for use with the Ensembl Genome Browser (http://www.ensembl.org).
+    The EnsEMBL::Web::Record group of Perl modules is design to manage
+    any arbitrary type of user created data in an SQL database. This
+    module follows the Active Record design pattern, in that each new
+    instantiated Record object represents a single row of a database.
+    That object can be manipulated programatically, and any changes made
+    can be stored in the database with a single record->save function
+    call.
+
+    Because arbitrary Perl data structures can be stored in this
+    manner, EnsEMBL::Web::Record allows user preferences to be easily
+    saved, and allows developers to implement new featurs quickly.
+
+    This module was first used (and has been abstracted from) the
+    Ensembl genome browser (http://www.ensembl.org).
+
+    New user data can be added to the database:
 
     use EnsEMBL::Web::Record;
 
@@ -36,6 +51,19 @@ It was initially developed for use with the Ensembl Genome Browser (http://www.e
     $bookmark->name('Ensembl');
     $bookmark->save;
     ...
+ 
+    The Record can be associated with an user id:
+
+    $record->user($id);
+
+    The same record can also be removed:
+
+    $bookmark->delete;
+
+    EnsEMBL::Web::Record also provides a number of methods for getting
+    collections of records from the database, using a field selector.
+ 
+    EnsEMBL::Web::Record::find_bookmarks_by_user_id($id).
 
 =cut 
 
@@ -58,7 +86,17 @@ my %ModifiedAt_of;
 my %Type_of;
 my %Owner_of;
 
-=head1 FUNCTIONS
+=head1 METHODS 
+=cut
+
+=head2 AUTOLOAD
+
+The AUTOLOAD method allows EnsEMBL::Web::Record to automatically provide
+getter and setter functionality for an arbitrary set of fields. It also
+automatically dispatches find_by requests.
+
+Field attributes are not validated against the database.
+
 =cut
 
 sub AUTOLOAD {
@@ -108,6 +146,10 @@ Creates a new Record object. This module follows the Active Record pattern: it c
 logic required to create and manipulate a piece of persistent data, and
 the information necessary to maintain this data in a database.
 
+You should pass in a valid database adaptor, which contains the necessary sql requests. An example adaptor can be found in the distribution.
+
+$record = EnsEMBL::Web::Record->new(( adaptor => $adaptor ));
+
 =cut
 
 sub new {
@@ -151,8 +193,10 @@ sub taint {
 }
 
 =head2 dump_data 
+
 Uses Data::Dumper to format a record's data for storage, 
 and also handles escaping of quotes to avoid SQL errors
+
 =cut 
 
 sub dump_data {
@@ -171,7 +215,9 @@ sub dump_data {
 }
 
 =head2 fields 
+
 Accessor for the fields property.
+
 =cut 
 
 sub fields {
@@ -189,7 +235,9 @@ sub fields {
 }
 
 =head2 records 
+
 Accessor for the records property.
+
 =cut 
 
 sub records {
@@ -200,7 +248,9 @@ sub records {
 }
 
 =head2 type 
+
 Accessor for the type property.
+
 =cut 
 
 sub type {
@@ -211,7 +261,9 @@ sub type {
 }
 
 =head2 tainted 
+
 Accessor for the tainted property.
+
 =cut 
 
 sub tainted {
@@ -222,7 +274,9 @@ sub tainted {
 }
 
 =head2 adaptor 
+
 Accessor for the tainted property.
+
 =cut 
 
 sub adaptor {
@@ -233,7 +287,9 @@ sub adaptor {
 }
 
 =head2 parameter_set 
+
 Accessor for the parameter_set property.
+
 =cut 
 
 sub parameter_set {
@@ -244,7 +300,9 @@ sub parameter_set {
 }
 
 =head2 id 
+
 Accessor for the id property.
+
 =cut 
 
 sub id {
@@ -255,7 +313,9 @@ sub id {
 }
 
 =head2 created_at 
+
 Accessor for the created_at property.
+
 =cut
 
 sub created_at {
@@ -266,7 +326,9 @@ sub created_at {
 }
 
 =head2 modified_at 
+
 Accessor for the modified_at property.
+
 =cut
 
 sub modified_at {
@@ -277,7 +339,9 @@ sub modified_at {
 }
 
 =head2 records_of_type 
+
 Returns an array of records, that match a particular type.
+
 =cut
 
 sub records_of_type {
@@ -301,8 +365,10 @@ sub records_of_type {
 }
 
 =head2 find_records 
+
 Returns an array of records. This method is called by the autoloading mechanism, and is not intended for 
 public use.
+
 =cut
 
 sub find_records {
@@ -343,9 +409,10 @@ sub find_records {
 }
 
 =head2 owner 
-Accessor for the owner property.
-=cut
 
+Accessor for the owner property.
+
+=cut
 
 sub owner {
   ### a
@@ -355,7 +422,9 @@ sub owner {
 }
 
 =head2 DESTROY 
+
 Called automatically by Perl when object reference count reaches zero.
+
 =cut
 
 sub DESTROY {
